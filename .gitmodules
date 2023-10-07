@@ -1,0 +1,6 @@
+[submodule "include/tray"]
+	path = include/tray
+	url = git@github.com:zserge/tray.git
+[submodule "include/log.c"]
+	path = include/log.c
+	url = git@github.com:rxi/log.c.git
