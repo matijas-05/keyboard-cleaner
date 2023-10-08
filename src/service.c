@@ -44,7 +44,9 @@ void disable_keyboard(void) {
         }
         log_info("Disabled keyboard");
 
+        // Wait until keyboard is re-enabled, without taking up CPU
         while (true) {
+            sleep(1);
         }
     } else {
         // Parent process - save child pid
