@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,7 @@ int child_pid = 0;
 
 void disable_keyboard(void) {
     if (child_pid != 0) {
-        log_error("Keyboard is already disabled");
+        log_warn("Keyboard is already disabled");
         return;
     }
 
@@ -53,7 +54,7 @@ void disable_keyboard(void) {
 
 void enable_keyboard(void) {
     if (child_pid == 0) {
-        log_error("Keyboard is already enabled");
+        log_warn("Keyboard is already enabled");
         return;
     }
 
@@ -72,7 +73,7 @@ void run_command(char buf[CMD_LEN]) {
     } else if (strcmp(buf, ENABLE) == 0) {
         enable_keyboard();
     } else {
-        log_error("Unknown command: %s", buf);
+        log_error("Unknown command: '%s'", buf);
     }
 }
 
@@ -82,6 +83,11 @@ int main(void) {
         return 1;
     }
     log_info("Starting keyboard disable service...");
+
+    if (atexit(&enable_keyboard) == -1) {
+        log_error("Failed to register exit handler: %s", strerror(errno));
+        return 1;
+    }
 
     int pipe_fd = open(PIPE_PATH, O_RDONLY);
     if (pipe_fd == -1 && errno != ENOENT) {
@@ -102,12 +108,21 @@ int main(void) {
     }
     log_debug("Opened named pipe");
 
+    struct pollfd pfds[1] = {{
+        .fd = pipe_fd,
+        .events = POLLIN,
+    }};
     while (true) {
-        char buf[CMD_LEN];
-        read(pipe_fd, &buf, sizeof(buf));
-        log_debug("Read from named pipe: %s", buf);
+        if (poll(pfds, 1, -1) == -1) {
+            log_error("Error polling name pipe: %s", strerror(errno));
+        } else if (pfds[0].revents & POLLIN) {
+            char buf[CMD_LEN + 1];
+            read(pipe_fd, &buf, CMD_LEN / sizeof(char));
+            buf[1] = '\0';
 
-        run_command(buf);
+            log_debug("Read from named pipe: '%s'", buf);
+            run_command(buf);
+        }
     }
 
     return 0;
