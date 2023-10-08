@@ -9,12 +9,13 @@
 #include "config.h"
 #include "log.c/log.h"
 
+// TODO: Select device
 #define DEVICE_PATH "/dev/input/event14"
 
-int child_pid = -1;
+int child_pid = 0;
 
 void disable_keyboard(void) {
-    if (child_pid != -1) {
+    if (child_pid != 0) {
         log_error("Keyboard is already disabled");
         return;
     }
@@ -50,6 +51,31 @@ void disable_keyboard(void) {
     }
 }
 
+void enable_keyboard(void) {
+    if (child_pid == 0) {
+        log_error("Keyboard is already enabled");
+        return;
+    }
+
+    // WARNING: If kill() is called with pid -1, it will send SIGTERM to all processes
+    if (kill(child_pid, SIGTERM) == -1) {
+        log_error("Failed to kill child process: %s", strerror(errno));
+    } else {
+        child_pid = 0;
+        log_info("Enabled keyboard");
+    }
+}
+
+void run_command(char buf[CMD_LEN]) {
+    if (strcmp(buf, DISABLE) == 0) {
+        disable_keyboard();
+    } else if (strcmp(buf, ENABLE) == 0) {
+        enable_keyboard();
+    } else {
+        log_error("Unknown command: %s", buf);
+    }
+}
+
 int main(void) {
     if (getuid() != 0) {
         log_error("This program must be run as root");
@@ -57,7 +83,7 @@ int main(void) {
     }
     log_info("Starting keyboard disable service...");
 
-    int pipe_fd = open(FIFO_PATH, O_RDONLY);
+    int pipe_fd = open(PIPE_PATH, O_RDONLY);
     if (pipe_fd == -1 && errno != ENOENT) {
         log_error("Failed to open named pipe: %s", strerror(errno));
         return 1;
@@ -69,7 +95,7 @@ int main(void) {
         log_debug("Waiting for tray to create named pipe...");
     }
     while (errno == ENOENT) {
-        pipe_fd = open(FIFO_PATH, O_RDONLY);
+        pipe_fd = open(PIPE_PATH, O_RDONLY);
         if (pipe_fd != -1) {
             break;
         }
@@ -81,15 +107,7 @@ int main(void) {
         read(pipe_fd, &buf, sizeof(buf));
         log_debug("Read from named pipe: %s", buf);
 
-        if (strcmp(buf, DISABLE) == 0) {
-            disable_keyboard();
-        } else if (strcmp(buf, ENABLE) == 0) {
-            kill(child_pid, SIGTERM);
-            child_pid = 0;
-            log_info("Enabled keyboard");
-        } else {
-            log_error("Unknown command: %s", buf);
-        }
+        run_command(buf);
     }
 
     return 0;

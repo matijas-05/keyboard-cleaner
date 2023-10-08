@@ -1,4 +1,5 @@
-#define FIFO_PATH "/tmp/keyboard-cleaner-fifo"
+#define PIPE_PATH "/tmp/keyboard-cleaner-fifo"
+#define CMD_LEN 1
+
 #define DISABLE "d"
 #define ENABLE "e"
-#define CMD_LEN 1

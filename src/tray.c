@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -10,48 +11,57 @@
 #define TRAY_APPINDICATOR 1
 #include "tray/tray.h"
 
-bool disabled = false;
 int pipe_fd = -1;
+struct tray tray;
 
-void toggle_keyboard(void) {
-    if (!disabled) {
-        if (write(pipe_fd, DISABLE, strlen(DISABLE)) == -1) {
-            log_error("Failed to write to named pipe: %s", strerror(errno));
-        } else {
-            disabled = true;
+int send_command(char* command) {
+    assert(strlen(command) == CMD_LEN);
+
+    if (write(pipe_fd, command, strlen(command)) == -1) {
+        log_error("Failed to write to named pipe: %s", strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+
+void toggle_keyboard(struct tray_menu* menuitem) {
+    if (!menuitem->checked) {
+        if (send_command(DISABLE) != -1) {
+            menuitem->checked = true;
         }
     } else {
-        if (write(pipe_fd, ENABLE, strlen(ENABLE)) == -1) {
-            log_error("Failed to write to named pipe: %s", strerror(errno));
-        } else {
-            disabled = false;
+        if (send_command(ENABLE) != -1) {
+            menuitem->checked = false;
         }
     }
+    tray_update(&tray);
 }
 
 void quit(void) {
+    send_command(ENABLE);
     exit(0);
 }
 
 int main(void) {
+    if (atexit(&quit) == -1) {
+        log_error("Failed to register exit handler: %s", strerror(errno));
+        return 1;
+    }
+
     struct tray_menu menu[] = {{
                                    .text = "Disable keyboard",
-                                   .cb = (void (*)(struct tray_menu* menu))(&toggle_keyboard),
+                                   .cb = &toggle_keyboard,
                                },
                                {
                                    .text = "Quit",
                                    .cb = (void (*)(struct tray_menu*))(&quit),
                                },
                                {.text = NULL}};
-    struct tray tray = {.menu = menu, .icon = ""};
+    tray = (struct tray){.menu = menu, .icon = "icon.png"};
 
-    log_info("Starting tray...");
-    if (tray_init(&tray) == -1) {
-        log_error("Failed to create tray icon");
-        return 1;
-    }
+    log_info("Waiting for keyboard disable service to start...");
 
-    if (mkfifo(FIFO_PATH, 0666) == -1 && errno != EEXIST) {
+    if (mkfifo(PIPE_PATH, 0666) == -1 && errno != EEXIST) {
         log_error("Failed to create named pipe: %s", strerror(errno));
         return 1;
     }
@@ -59,14 +69,20 @@ int main(void) {
         log_debug("Created named pipe");
     }
 
-    pipe_fd = open(FIFO_PATH, O_WRONLY);
+    pipe_fd = open(PIPE_PATH, O_WRONLY);
     if (pipe_fd == -1) {
         log_error("Failed to open named pipe: %s", strerror(errno));
     }
     log_debug("Opened named pipe");
 
+    log_info("Starting tray UI...");
+    if (tray_init(&tray) == -1) {
+        log_error("Failed to create tray icon");
+        return 1;
+    }
     while (tray_loop(1) == 0) {
     }
+
     tray_exit();
 
     return 0;
