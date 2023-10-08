@@ -1,7 +1,13 @@
+#include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include "config.h"
+#include "log.c/log.h"
 
+// TODO: Replace with QT
 #define TRAY_APPINDICATOR 1
-#include "log.c/src/log.h"
 #include "tray/tray.h"
 
 bool disabled = false;
@@ -38,6 +44,20 @@ int main(void) {
         log_error("Failed to create tray icon");
         return 1;
     }
+
+    if (mkfifo(FIFO_PATH, 0666) == -1 && errno != EEXIST) {
+        log_error("Failed to create named pipe: %s", strerror(errno));
+        return 1;
+    }
+    if (errno == 0) {
+        log_debug("Created named pipe");
+    }
+
+    int fd = open(FIFO_PATH, O_WRONLY);
+    if (fd == -1) {
+        log_error("Failed to open named pipe: %s", strerror(errno));
+    }
+    log_debug("Opened named pipe");
 
     while (tray_loop(1) == 0) {
     }

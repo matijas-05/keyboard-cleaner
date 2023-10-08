@@ -19,13 +19,13 @@ include_directories(${APPINDICATOR3_INCLUDE_DIRS})
 link_directories(${APPINDICATOR3_LIBRARY_DIRS})
 
 # log.c
-add_library(log.c STATIC ./include/log.c/src/log.c)
+add_library(log.c STATIC ./include/log.c/log.c)
 target_compile_options(log.c PRIVATE -DLOG_USE_COLOR)
 
 add_compile_options(-Wall -Wextra -Wpedantic -g)
 
-add_executable(${PROJECT_NAME} ./src/main.c)
+add_executable(${PROJECT_NAME} ./src/tray.c)
 target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES} ${APPINDICATOR3_LIBRARIES} log.c)
 
-add_executable(${PROJECT_NAME}-cli ./src/cli.c)
-target_link_libraries(${PROJECT_NAME}-cli log.c)
+add_executable(${PROJECT_NAME}-service ./src/service.c)
+target_link_libraries(${PROJECT_NAME}-service log.c)
