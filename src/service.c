@@ -124,6 +124,9 @@ int main(void) {
 
             log_debug("Read from named pipe: '%s'", buf);
             run_command(buf);
+        } else {
+            // Avoid high CPU usage when polling fails (eg. when tray is disconnected)
+            sleep(1);
         }
     }
 
