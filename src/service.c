@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -18,7 +19,6 @@ void disable_keyboard(void) {
         return;
     }
 
-    // TODO: Communicate via pipe with parent process to send errors
     int pid = fork();
     if (pid == -1) {
         log_error("Failed to fork process: %s", strerror(errno));
@@ -40,12 +40,7 @@ void disable_keyboard(void) {
             close(fd);
             return;
         }
-
         log_info("Disabled keyboard");
-
-        // TODO: Remove when named pipe is done
-        sleep(3);
-        exit(0);
 
         while (true) {
         }
@@ -62,8 +57,8 @@ int main(void) {
     }
     log_info("Starting keyboard disable service...");
 
-    int fd = open(FIFO_PATH, O_RDONLY);
-    if (fd == -1 && errno != ENOENT) {
+    int pipe_fd = open(FIFO_PATH, O_RDONLY);
+    if (pipe_fd == -1 && errno != ENOENT) {
         log_error("Failed to open named pipe: %s", strerror(errno));
         return 1;
     }
@@ -74,14 +69,27 @@ int main(void) {
         log_debug("Waiting for tray to create named pipe...");
     }
     while (errno == ENOENT) {
-        fd = open(FIFO_PATH, O_RDONLY);
-        if (fd != -1) {
+        pipe_fd = open(FIFO_PATH, O_RDONLY);
+        if (pipe_fd != -1) {
             break;
         }
     }
     log_debug("Opened named pipe");
 
     while (true) {
+        char buf[CMD_LEN];
+        read(pipe_fd, &buf, sizeof(buf));
+        log_debug("Read from named pipe: %s", buf);
+
+        if (strcmp(buf, DISABLE) == 0) {
+            disable_keyboard();
+        } else if (strcmp(buf, ENABLE) == 0) {
+            kill(child_pid, SIGTERM);
+            child_pid = 0;
+            log_info("Enabled keyboard");
+        } else {
+            log_error("Unknown command: %s", buf);
+        }
     }
 
     return 0;

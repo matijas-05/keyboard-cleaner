@@ -11,15 +11,21 @@
 #include "tray/tray.h"
 
 bool disabled = false;
+int pipe_fd = -1;
 
-void toggle_keyboard(struct tray_menu* element) {
-    // TODO: Named pipe
+void toggle_keyboard(void) {
     if (!disabled) {
-        system("pkexec ./keyboard-cleaner-cli disable");
-        element->checked = true;
+        if (write(pipe_fd, DISABLE, strlen(DISABLE)) == -1) {
+            log_error("Failed to write to named pipe: %s", strerror(errno));
+        } else {
+            disabled = true;
+        }
     } else {
-        system("pkexec ./keyboard-cleaner-cli enable");
-        element->checked = false;
+        if (write(pipe_fd, ENABLE, strlen(ENABLE)) == -1) {
+            log_error("Failed to write to named pipe: %s", strerror(errno));
+        } else {
+            disabled = false;
+        }
     }
 }
 
@@ -30,7 +36,7 @@ void quit(void) {
 int main(void) {
     struct tray_menu menu[] = {{
                                    .text = "Disable keyboard",
-                                   .cb = &toggle_keyboard,
+                                   .cb = (void (*)(struct tray_menu* menu))(&toggle_keyboard),
                                },
                                {
                                    .text = "Quit",
@@ -53,8 +59,8 @@ int main(void) {
         log_debug("Created named pipe");
     }
 
-    int fd = open(FIFO_PATH, O_WRONLY);
-    if (fd == -1) {
+    pipe_fd = open(FIFO_PATH, O_WRONLY);
+    if (pipe_fd == -1) {
         log_error("Failed to open named pipe: %s", strerror(errno));
     }
     log_debug("Opened named pipe");
