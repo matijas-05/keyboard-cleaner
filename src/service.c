@@ -116,7 +116,7 @@ int main(void) {
     }};
     while (true) {
         if (poll(pfds, 1, -1) == -1) {
-            log_error("Error polling name pipe: %s", strerror(errno));
+            log_error("Error polling named pipe: %s", strerror(errno));
         } else if (pfds[0].revents & POLLIN) {
             char buf[CMD_LEN + 1];
             read(pipe_fd, &buf, CMD_LEN / sizeof(char));
