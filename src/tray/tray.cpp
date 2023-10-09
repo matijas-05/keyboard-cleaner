@@ -1,7 +1,4 @@
 #include "tray.hpp"
-#include <fcntl.h>
-#include <unistd.h>
-#include <QtWidgets>
 #include "config.h"
 #include "log.c/log.h"
 #include "pipe-writer.hpp"

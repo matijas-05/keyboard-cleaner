@@ -1,4 +1,6 @@
-#include <qsystemtrayicon.h>
+#ifndef TRAY_HPP
+#define TRAY_HPP
+
 #include <QtWidgets>
 #include "pipe-writer.hpp"
 
@@ -20,3 +22,4 @@ class Tray : public QObject {
     QMenu m_trayMenu;
     PipeWriter& m_pipeWriter;
 };
+#endif  // !TRAY_HPP
