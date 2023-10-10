@@ -1,9 +1,9 @@
 #include "pipe_writer.hpp"
-#include "config.h"
+#include "../config.hpp"
 
 int PipeWriter::open() {
     m_stream = std::ofstream(PIPE_PATH);
-    if (m_stream.bad()) {
+    if (!m_stream) {
         return -1;
     }
     return 0;
@@ -11,7 +11,7 @@ int PipeWriter::open() {
 
 int PipeWriter::write(std::string command) {
     m_stream << command << std::flush;
-    if (m_stream.fail()) {
+    if (!m_stream) {
         return -1;
     }
     return 0;

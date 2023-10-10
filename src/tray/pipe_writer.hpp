@@ -2,7 +2,7 @@
 #define PIPE_WRITER_HPP
 
 #include <fstream>
-#include "config.h"
+#include "../config.hpp"
 
 class PipeWriter {
    public:

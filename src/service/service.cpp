@@ -7,7 +7,10 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include "config.h"
+#include <chrono>
+#include <cstring>
+#include <thread>
+#include "../config.hpp"
 #include "log.c/log.h"
 
 // TODO: Select device
@@ -23,22 +26,22 @@ void disable_keyboard(void) {
 
     int pid = fork();
     if (pid == -1) {
-        log_error("Failed to fork process: %s", strerror(errno));
+        log_error("Failed to fork process: %s", std::strerror(errno));
         return;
     } else if (pid == 0) {
         // Child process - disable keyboard and keep process running
 
         // Wait 100ms to avoid stuck key
-        nanosleep(&(struct timespec){.tv_nsec = 100 * 1000 * 1000}, NULL);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
         int fd = open(DEVICE_PATH, O_WRONLY);
         if (fd == -1) {
-            log_error("Failed to open device: %s", strerror(errno));
+            log_error("Failed to open device: %s", std::strerror(errno));
             close(fd);
             return;
         }
         if (ioctl(fd, EVIOCGRAB, 1) == -1) {
-            log_error("Failed to disable keyboard: %s", strerror(errno));
+            log_error("Failed to disable keyboard: %s", std::strerror(errno));
             close(fd);
             return;
         }
@@ -62,7 +65,7 @@ void enable_keyboard(void) {
 
     // WARNING: If kill() is called with pid -1, it will send SIGTERM to all processes
     if (kill(child_pid, SIGTERM) == -1) {
-        log_error("Failed to kill child process: %s", strerror(errno));
+        log_error("Failed to kill child process: %s", std::strerror(errno));
     } else {
         child_pid = 0;
         log_info("Enabled keyboard");
@@ -79,21 +82,22 @@ void run_command(char buf[CMD_LEN]) {
     }
 }
 
-int main(void) {
+int main() {
+    // TODO: Make cross-platform
     if (getuid() != 0) {
         log_error("This program must be run as root");
         return 1;
     }
     log_info("Starting keyboard disable service...");
 
-    if (atexit(&enable_keyboard) == -1) {
-        log_error("Failed to register exit handler: %s", strerror(errno));
+    if (std::atexit(&enable_keyboard) == -1) {
+        log_error("Failed to register exit handler: %s", std::strerror(errno));
         return 1;
     }
 
     int pipe_fd = open(PIPE_PATH, O_RDONLY);
     if (pipe_fd == -1 && errno != ENOENT) {
-        log_error("Failed to open named pipe: %s", strerror(errno));
+        log_error("Failed to open named pipe: %s", std::strerror(errno));
         return 1;
     }
 
@@ -116,7 +120,7 @@ int main(void) {
     }};
     while (true) {
         if (poll(pfds, 1, -1) == -1) {
-            log_error("Error polling named pipe: %s", strerror(errno));
+            log_error("Error polling named pipe: %s", std::strerror(errno));
         } else if (pfds[0].revents & POLLIN) {
             char buf[CMD_LEN + 1];
             read(pipe_fd, &buf, CMD_LEN / sizeof(char));

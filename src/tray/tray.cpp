@@ -1,5 +1,5 @@
 #include "tray.hpp"
-#include "config.h"
+#include "../config.hpp"
 #include "log.c/log.h"
 #include "pipe_writer.hpp"
 
