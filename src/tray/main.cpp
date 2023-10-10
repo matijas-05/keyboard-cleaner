@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include "../config.hpp"
 #include "log.c/log.h"
 #include "tray.hpp"
 

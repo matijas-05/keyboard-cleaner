@@ -1,20 +1,12 @@
-#include <errno.h>
 #include <fcntl.h>
-#include <linux/input.h>
 #include <poll.h>
 #include <signal.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
-#include <chrono>
 #include <cstring>
 #include <thread>
 #include "../config.hpp"
 #include "log.c/log.h"
-
-// TODO: Select device
-#define DEVICE_PATH "/dev/input/event14"
+#include "os_specific.hpp"
 
 int child_pid = 0;
 
@@ -30,22 +22,7 @@ void disable_keyboard(void) {
         return;
     } else if (pid == 0) {
         // Child process - disable keyboard and keep process running
-
-        // Wait 100ms to avoid stuck key
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-        int fd = open(DEVICE_PATH, O_WRONLY);
-        if (fd == -1) {
-            log_error("Failed to open device: %s", std::strerror(errno));
-            close(fd);
-            return;
-        }
-        if (ioctl(fd, EVIOCGRAB, 1) == -1) {
-            log_error("Failed to disable keyboard: %s", std::strerror(errno));
-            close(fd);
-            return;
-        }
-        log_info("Disabled keyboard");
+        blockKeys();
 
         // Wait until keyboard is re-enabled, without taking up CPU
         while (true) {
@@ -83,7 +60,7 @@ void run_command(char buf[CMD_LEN]) {
 }
 
 int main() {
-    // TODO: Make cross-platform
+    // TODO: Make cross-platform (root not required on macos)
     if (getuid() != 0) {
         log_error("This program must be run as root");
         return 1;
