@@ -1,8 +1,6 @@
-#ifndef PIPE_WRITER_HPP
-#define PIPE_WRITER_HPP
+#pragma once
 
 #include <fstream>
-#include "../config.hpp"
 
 class PipeWriter {
    public:
@@ -12,5 +10,3 @@ class PipeWriter {
    private:
     std::ofstream m_stream;
 };
-
-#endif  // !PIPE_WRITER_HPP

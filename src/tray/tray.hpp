@@ -1,5 +1,4 @@
-#ifndef TRAY_HPP
-#define TRAY_HPP
+#pragma once
 
 #include <QtWidgets>
 #include "pipe_writer.hpp"
@@ -22,4 +21,3 @@ class Tray : public QObject {
     QMenu m_trayMenu;
     PipeWriter& m_pipeWriter;
 };
-#endif  // !TRAY_HPP
