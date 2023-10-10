@@ -7,7 +7,7 @@
 class PipeWriter {
    public:
     int open();
-    int write(const char command[CMD_LEN]);
+    int write(std::string command);
 
    private:
     std::ofstream m_stream;

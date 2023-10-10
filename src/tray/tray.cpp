@@ -6,7 +6,7 @@
 void Tray::init() {
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
         log_error("System tray is not available");
-        exit(1);
+        std::exit(1);
     }
 
     QAction* disableKeyboard = new QAction("Disable keyboard", this);
@@ -28,10 +28,10 @@ void Tray::show() {
 // slots
 void Tray::toggleKeyboard(bool value) const {
     if (m_pipeWriter.write(value ? DISABLE : ENABLE) == -1) {
-        log_error("Failed to write to named pipe: %s", strerror(errno));
+        log_error("Failed to write to named pipe: %s", std::strerror(errno));
     }
 }
 void Tray::quit() const {
     m_pipeWriter.write(ENABLE);
-    exit(0);
+    std::exit(0);
 }

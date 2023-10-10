@@ -9,7 +9,7 @@ int PipeWriter::open() {
     return 0;
 }
 
-int PipeWriter::write(const char command[CMD_LEN]) {
+int PipeWriter::write(std::string command) {
     m_stream << command << std::flush;
     if (m_stream.fail()) {
         return -1;
