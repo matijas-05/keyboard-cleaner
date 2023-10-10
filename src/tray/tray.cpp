@@ -1,7 +1,7 @@
 #include "tray.hpp"
 #include "config.h"
 #include "log.c/log.h"
-#include "pipe-writer.hpp"
+#include "pipe_writer.hpp"
 
 void Tray::init() {
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {

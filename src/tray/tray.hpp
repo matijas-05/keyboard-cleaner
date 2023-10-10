@@ -2,7 +2,7 @@
 #define TRAY_HPP
 
 #include <QtWidgets>
-#include "pipe-writer.hpp"
+#include "pipe_writer.hpp"
 
 class Tray : public QObject {
     Q_OBJECT

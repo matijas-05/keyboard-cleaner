@@ -1,4 +1,4 @@
-#include "pipe-writer.hpp"
+#include "pipe_writer.hpp"
 #include "config.h"
 
 int PipeWriter::open() {
