@@ -7,6 +7,11 @@ int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     PipeWriter pipeWriter;
 
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        log_error("System tray is not available");
+        std::exit(1);
+    }
+
     // TODO: Make cross platform
     if (mkfifo(PIPE_PATH, 0666) == -1 && errno != EEXIST) {
         log_error("Failed to create named pipe: %s", std::strerror(errno));

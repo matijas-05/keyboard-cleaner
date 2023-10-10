@@ -4,11 +4,6 @@
 #include "pipe_writer.hpp"
 
 void Tray::init() {
-    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
-        log_error("System tray is not available");
-        std::exit(1);
-    }
-
     QAction* disableKeyboard = new QAction("Disable keyboard", this);
     disableKeyboard->setCheckable(true);
     connect(disableKeyboard, &QAction::toggled, this, &Tray::toggleKeyboard);
