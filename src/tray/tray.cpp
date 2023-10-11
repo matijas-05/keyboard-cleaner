@@ -1,6 +1,7 @@
 #include "tray.hpp"
+#include "../config.hpp"
 #include "log.c/log.h"
-#include "service.hpp"
+#include "pipe_writer.hpp"
 
 void Tray::init() {
     QAction* disableKeyboard = new QAction("Disable keyboard", this);
@@ -21,12 +22,11 @@ void Tray::show() {
 
 // slots
 void Tray::toggleKeyboard(bool value) const {
-    if (value) {
-        disableKeyboard();
-    } else {
-        enableKeyboard();
+    if (m_pipeWriter.write(value ? DISABLE : ENABLE) == -1) {
+        log_error("Failed to write to named pipe: %s", std::strerror(errno));
     }
 }
 void Tray::quit() const {
+    m_pipeWriter.write(ENABLE);
     std::exit(0);
 }
