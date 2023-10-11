@@ -1,14 +1,12 @@
 #pragma once
 
 #include <QtWidgets>
-#include "pipe_writer.hpp"
 
 class Tray : public QObject {
     Q_OBJECT
 
    public:
-    Tray(PipeWriter& pipeWriter)
-        : m_tray(QSystemTrayIcon()), m_trayMenu(QMenu()), m_pipeWriter(pipeWriter){};
+    Tray() : m_tray(QSystemTrayIcon()), m_trayMenu(QMenu()){};
     void init();
     void show();
 
@@ -19,5 +17,4 @@ class Tray : public QObject {
    private:
     QSystemTrayIcon m_tray;
     QMenu m_trayMenu;
-    PipeWriter& m_pipeWriter;
 };

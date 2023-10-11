@@ -25,8 +25,5 @@ if(${APPLE})
   set(OS_SPECIFIC_LIBRARIES ${CARBON_LIBRARY})
 endif()
 
-qt_add_executable(${PROJECT_NAME}  ./src/tray/main.cpp ./src/tray/tray.cpp ./src/tray/pipe_writer.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets)
-
-add_executable(${PROJECT_NAME}-service ./src/service/service.cpp ./src/service/os_specific.cpp)
-target_link_libraries(${PROJECT_NAME}-service PRIVATE stdc++ log.c ${OS_SPECIFIC_LIBRARIES})
+qt_add_executable(${PROJECT_NAME} ./src/main.cpp ./src/os_specific.cpp ./src/service.cpp ./src/tray.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets ${OS_SPECIFIC_LIBRARIES})
