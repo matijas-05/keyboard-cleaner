@@ -7,15 +7,17 @@
 #include "../config.hpp"
 #include "log.c/log.h"
 #include "os_specific.hpp"
+#include "pipe_reader.hpp"
 
-int child_pid = 0;
+int childPid = 0;
 
-void disable_keyboard(void) {
-    if (child_pid != 0) {
+void disableKeyboard(void) {
+    if (childPid != 0) {
         log_warn("Keyboard is already disabled");
         return;
     }
 
+    // TODO: Make cross platform
     int pid = fork();
     if (pid == -1) {
         log_error("Failed to fork process: %s", std::strerror(errno));
@@ -30,85 +32,57 @@ void disable_keyboard(void) {
         }
     } else {
         // Parent process - save child pid
-        child_pid = pid;
+        childPid = pid;
     }
 }
 
-void enable_keyboard(void) {
-    if (child_pid == 0) {
+void enableKeyboard(void) {
+    if (childPid == 0) {
         log_warn("Keyboard is already enabled");
         return;
     }
 
     // WARNING: If kill() is called with pid -1, it will send SIGTERM to all processes
-    if (kill(child_pid, SIGTERM) == -1) {
+    if (kill(childPid, SIGTERM) == -1) {
         log_error("Failed to kill child process: %s", std::strerror(errno));
     } else {
-        child_pid = 0;
+        childPid = 0;
         log_info("Enabled keyboard");
     }
 }
 
-void run_command(char buf[CMD_LEN]) {
-    if (strcmp(buf, DISABLE) == 0) {
-        disable_keyboard();
-    } else if (strcmp(buf, ENABLE) == 0) {
-        enable_keyboard();
+void runCommand(std::string command) {
+    if (command == DISABLE) {
+        disableKeyboard();
+    } else if (command == ENABLE) {
+        enableKeyboard();
     } else {
-        log_error("Unknown command: '%s'", buf);
+        log_error("Unknown command: '%s'", command.c_str());
     }
 }
 
 int main() {
-    // TODO: Make cross-platform (root not required on macos)
-    if (getuid() != 0) {
-        log_error("This program must be run as root");
-        return 1;
-    }
     log_info("Starting keyboard disable service...");
 
-    if (std::atexit(&enable_keyboard) == -1) {
+    if (std::atexit(&enableKeyboard) == -1) {
         log_error("Failed to register exit handler: %s", std::strerror(errno));
         return 1;
     }
 
-    int pipe_fd = open(PIPE_PATH, O_RDONLY);
-    if (pipe_fd == -1 && errno != ENOENT) {
+    PipeReader pipeReader;
+    if (pipeReader.open() == -1) {
         log_error("Failed to open named pipe: %s", std::strerror(errno));
         return 1;
     }
-
-    // Wait until tray creates named pipe
-    // Tray has to do it because it has lower permissions
-    if (errno == ENOENT) {
-        log_debug("Waiting for tray to create named pipe...");
-    }
-    while (errno == ENOENT) {
-        pipe_fd = open(PIPE_PATH, O_RDONLY);
-        if (pipe_fd != -1) {
-            break;
-        }
-    }
     log_debug("Opened named pipe");
 
-    struct pollfd pfds[1] = {{
-        .fd = pipe_fd,
-        .events = POLLIN,
-    }};
     while (true) {
-        if (poll(pfds, 1, -1) == -1) {
-            log_error("Error polling named pipe: %s", std::strerror(errno));
-        } else if (pfds[0].revents & POLLIN) {
-            char buf[CMD_LEN + 1];
-            read(pipe_fd, &buf, CMD_LEN / sizeof(char));
-            buf[1] = '\0';
-
-            log_debug("Read from named pipe: '%s'", buf);
-            run_command(buf);
-        } else {
-            // Avoid high CPU usage when polling fails (eg. when tray is disconnected)
-            sleep(1);
+        std::string buf = pipeReader.read();
+        if (!buf.empty()) {
+            log_debug("Read from named pipe: '%s'", buf.c_str());
+            runCommand(buf);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 
     return 0;

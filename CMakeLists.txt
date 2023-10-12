@@ -28,5 +28,5 @@ endif()
 qt_add_executable(${PROJECT_NAME}  ./src/tray/main.cpp ./src/tray/tray.cpp ./src/tray/pipe_writer.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets)
 
-add_executable(${PROJECT_NAME}-service ./src/service/service.cpp ./src/service/os_specific.cpp)
+add_executable(${PROJECT_NAME}-service ./src/service/service.cpp ./src/service/os_specific.cpp ./src/service/pipe_reader.cpp)
 target_link_libraries(${PROJECT_NAME}-service PRIVATE stdc++ log.c ${OS_SPECIFIC_LIBRARIES})
