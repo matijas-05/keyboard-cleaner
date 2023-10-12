@@ -12,9 +12,7 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
 
-    // TODO: Make cross platform: fifos on unix and unnamed pipes on windows
-    // https://learn.microsoft.com/en-us/windows/win32/ipc/anonymous-pipe-operations
-    // https://stackoverflow.com/questions/26561604/create-windows-named-pipe-in-c/26561999#26561999
+    // TODO: Make cross platform
     if (mkfifo(PIPE_PATH, 0666) == -1 && errno != EEXIST) {
         log_error("Failed to create named pipe: %s", std::strerror(errno));
         std::exit(1);

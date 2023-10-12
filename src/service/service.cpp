@@ -3,7 +3,6 @@
 #include <signal.h>
 #include <unistd.h>
 #include <cstring>
-#include <fstream>
 #include <thread>
 #include "../config.hpp"
 #include "log.c/log.h"
@@ -11,13 +10,12 @@
 
 int child_pid = 0;
 
-void disableKeyboard() {
+void disable_keyboard(void) {
     if (child_pid != 0) {
         log_warn("Keyboard is already disabled");
         return;
     }
 
-    // TODO: Use threads
     int pid = fork();
     if (pid == -1) {
         log_error("Failed to fork process: %s", std::strerror(errno));
@@ -25,13 +23,18 @@ void disableKeyboard() {
     } else if (pid == 0) {
         // Child process - disable keyboard and keep process running
         blockKeys();
+
+        // Wait until keyboard is re-enabled, without taking up CPU
+        while (true) {
+            sleep(1);
+        }
     } else {
         // Parent process - save child pid
         child_pid = pid;
     }
 }
 
-void enableKeyboard() {
+void enable_keyboard(void) {
     if (child_pid == 0) {
         log_warn("Keyboard is already enabled");
         return;
@@ -46,26 +49,31 @@ void enableKeyboard() {
     }
 }
 
-void runCommand(char buf[CMD_LEN]) {
+void run_command(char buf[CMD_LEN]) {
     if (strcmp(buf, DISABLE) == 0) {
-        disableKeyboard();
+        disable_keyboard();
     } else if (strcmp(buf, ENABLE) == 0) {
-        enableKeyboard();
+        enable_keyboard();
     } else {
         log_error("Unknown command: '%s'", buf);
     }
 }
 
 int main() {
+    // TODO: Make cross-platform (root not required on macos)
+    if (getuid() != 0) {
+        log_error("This program must be run as root");
+        return 1;
+    }
     log_info("Starting keyboard disable service...");
 
-    if (std::atexit(&enableKeyboard) == -1) {
+    if (std::atexit(&enable_keyboard) == -1) {
         log_error("Failed to register exit handler: %s", std::strerror(errno));
         return 1;
     }
 
-    std::ifstream pipe_stream(PIPE_PATH);
-    if (!pipe_stream.is_open() && errno != ENOENT) {
+    int pipe_fd = open(PIPE_PATH, O_RDONLY);
+    if (pipe_fd == -1 && errno != ENOENT) {
         log_error("Failed to open named pipe: %s", std::strerror(errno));
         return 1;
     }
@@ -76,26 +84,31 @@ int main() {
         log_debug("Waiting for tray to create named pipe...");
     }
     while (errno == ENOENT) {
-        pipe_stream.open(PIPE_PATH);
-        if (pipe_stream.is_open()) {
+        pipe_fd = open(PIPE_PATH, O_RDONLY);
+        if (pipe_fd != -1) {
             break;
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     log_debug("Opened named pipe");
-    pipe_stream.close();
 
+    struct pollfd pfds[1] = {{
+        .fd = pipe_fd,
+        .events = POLLIN,
+    }};
     while (true) {
-        // We have to open and close the pipe every time because when tray quits, it all breaks
-        char buf[CMD_LEN + 1];
-        pipe_stream.open(PIPE_PATH);
-        pipe_stream.read(buf, CMD_LEN);
-        if (strcmp(buf, "") != 0) {
+        if (poll(pfds, 1, -1) == -1) {
+            log_error("Error polling named pipe: %s", std::strerror(errno));
+        } else if (pfds[0].revents & POLLIN) {
+            char buf[CMD_LEN + 1];
+            read(pipe_fd, &buf, CMD_LEN / sizeof(char));
+            buf[1] = '\0';
+
             log_debug("Read from named pipe: '%s'", buf);
-            runCommand(buf);
+            run_command(buf);
+        } else {
+            // Avoid high CPU usage when polling fails (eg. when tray is disconnected)
+            sleep(1);
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        pipe_stream.close();
     }
 
     return 0;
