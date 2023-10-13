@@ -1,7 +1,3 @@
-#include <fcntl.h>
-#include <poll.h>
-#include <signal.h>
-#include <unistd.h>
 #include <cstring>
 #include <thread>
 #include "../config.hpp"
@@ -9,15 +5,19 @@
 #include "os_specific.hpp"
 #include "pipe_reader.hpp"
 
+#if defined(__linux__) || defined(__APPLE__)
+#include <signal.h>
+#include <unistd.h>
 int childPid = 0;
 
-void disableKeyboard(void) {
+void disableKeyboard() {
     if (childPid != 0) {
         log_warn("Keyboard is already disabled");
         return;
     }
 
-    // TODO: Make cross platform
+    // Fork on linux and mac, because it's the easiest way to do it on mac,
+    // and it can also be done this way on linux, even though it's not necessary
     int pid = fork();
     if (pid == -1) {
         log_error("Failed to fork process: %s", std::strerror(errno));
@@ -35,14 +35,12 @@ void disableKeyboard(void) {
         childPid = pid;
     }
 }
-
-void enableKeyboard(void) {
+void enableKeyboard() {
     if (childPid == 0) {
         log_warn("Keyboard is already enabled");
         return;
     }
 
-    // WARNING: If kill() is called with pid -1, it will send SIGTERM to all processes
     if (kill(childPid, SIGTERM) == -1) {
         log_error("Failed to kill child process: %s", std::strerror(errno));
     } else {
@@ -50,6 +48,9 @@ void enableKeyboard(void) {
         log_info("Enabled keyboard");
     }
 }
+#elif defined(_WIN32)
+// TODO: Implement https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-blockinput
+#endif
 
 void runCommand(std::string command) {
     if (command == DISABLE) {
@@ -82,6 +83,7 @@ int main() {
             log_debug("Read from named pipe: '%s'", buf.c_str());
             runCommand(buf);
         }
+        // For when the pipe is closed from the tray's side
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 

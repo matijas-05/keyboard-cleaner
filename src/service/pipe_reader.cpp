@@ -37,4 +37,6 @@ std::string PipeReader::read() {
     }
     return std::string(buf, n);
 }
-#endif  // defined(__linux__) || defined(__APPLE__)
+#elif defined(_WIN32)
+// TODO: Implement
+#endif
