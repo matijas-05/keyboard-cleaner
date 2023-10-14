@@ -1,4 +1,4 @@
-#ifdef __linux__
+#if defined(__linux__)
 #include <linux/input.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
@@ -6,17 +6,16 @@
 
 // TODO: Select device
 #define DEVICE_PATH "/dev/input/event14"
-#endif  // __linux__
 
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 #include <Carbon/Carbon.h>
-#endif  // __APPLE__
+#endif
 
 #include <iostream>
 #include "log.c/log.h"
 
 void blockKeys() {
-#ifdef __linux__
+#if defined(__linux__)
     int fd = open(DEVICE_PATH, O_WRONLY);
     if (fd == -1) {
         log_error("Failed to open device: %s", std::strerror(errno));
@@ -31,9 +30,7 @@ void blockKeys() {
     }
 
     log_info("Disabled keyboard");
-#endif  // __linux__
-
-#ifdef __APPLE__
+#elif defined(__APPLE__)
     // https://chat.openai.com/share/40df0dc9-dd46-4203-bb44-c5eaf312e82a
     CFMachPortRef eventTap;
     CGEventMask mask = kCGEventMaskForAllEvents;
@@ -70,5 +67,5 @@ void blockKeys() {
     // Clean up
     CFRelease(runLoopSource);
     CFRelease(eventTap);
-#endif  // __APPLE__
+#endif
 }

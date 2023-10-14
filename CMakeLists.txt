@@ -22,11 +22,14 @@ qt_standard_project_setup()
 
 if(${APPLE})
   find_library(CARBON_LIBRARY Carbon)
-  set(OS_SPECIFIC_LIBRARIES ${CARBON_LIBRARY})
+  set(OS_SPECIFIC_LIBRARIES_SERVICE ${CARBON_LIBRARY})
+elseif(${LINUX})
+  find_library(EVDEV_LIBRARY evdev)
+  set(OS_SPECIFIC_LIBRARIES_TRAY ${EVDEV_LIBRARY})
 endif()
 
 qt_add_executable(${PROJECT_NAME}  ./src/tray/main.cpp ./src/tray/tray.cpp ./src/tray/pipe_writer.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets ${OS_SPECIFIC_LIBRARIES_TRAY})
 
 add_executable(${PROJECT_NAME}-service ./src/service/service.cpp ./src/service/os_specific.cpp ./src/service/pipe_reader.cpp)
-target_link_libraries(${PROJECT_NAME}-service PRIVATE stdc++ log.c ${OS_SPECIFIC_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}-service PRIVATE stdc++ log.c ${OS_SPECIFIC_LIBRARIES_SERVICE})
