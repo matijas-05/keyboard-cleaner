@@ -10,7 +10,11 @@
 #include <unistd.h>
 int childPid = 0;
 
+#if defined(__linux__)
+void disableKeyboard(std::string keyboardPath) {
+#else
 void disableKeyboard() {
+#endif
     if (childPid != 0) {
         log_warn("Keyboard is already disabled");
         return;
@@ -24,7 +28,11 @@ void disableKeyboard() {
         return;
     } else if (pid == 0) {
         // Child process - disable keyboard and keep process running
+#ifdef __linux__
+        blockKeys(keyboardPath);
+#else
         blockKeys();
+#endif
 
         // Wait until keyboard is re-enabled, without taking up CPU
         while (true) {
@@ -53,9 +61,13 @@ void enableKeyboard() {
 #endif
 
 void runCommand(std::string command) {
-    if (command == DISABLE) {
+    if (command[0] == *DISABLE) {
+#ifdef __linux__
+        disableKeyboard(command.substr(2));  // 1 is space, 2 is the first character of the path
+#else
         disableKeyboard();
-    } else if (command == ENABLE) {
+#endif
+    } else if (command[0] == *ENABLE) {
         enableKeyboard();
     } else {
         log_error("Unknown command: '%s'", command.c_str());

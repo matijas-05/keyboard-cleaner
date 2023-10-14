@@ -71,9 +71,21 @@ void Tray::setKeyboardPath(const std::string& path) {
 }
 #endif  // __linux__
 void Tray::toggleKeyboard(bool value) const {
+#ifdef __linux__
+    if (value) {
+        if (m_pipeWriter.write(std::string(DISABLE + (" " + m_keyboardPath))) == -1) {
+            log_error("Failed to write to named pipe: %s", std::strerror(errno));
+        }
+    } else {
+        if (m_pipeWriter.write(ENABLE) == -1) {
+            log_error("Failed to write to named pipe: %s", std::strerror(errno));
+        }
+    }
+#else
     if (m_pipeWriter.write(value ? DISABLE : ENABLE) == -1) {
         log_error("Failed to write to named pipe: %s", std::strerror(errno));
     }
+#endif
 }
 void Tray::quit() const {
     m_pipeWriter.write(ENABLE);
