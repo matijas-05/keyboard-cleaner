@@ -12,7 +12,7 @@
 #include "log.c/log.h"
 
 #if defined(__linux__)
-void blockKeys(std::string keyboardPath) {
+void blockKeyboard(std::string keyboardPath) {
     int fd = open(keyboardPath.c_str(), O_WRONLY);
     if (fd == -1) {
         log_error("Failed to open device: %s", std::strerror(errno));
@@ -29,7 +29,7 @@ void blockKeys(std::string keyboardPath) {
     log_info("Disabled keyboard");
 }
 #elif defined(__APPLE__)
-void blockKeys() {
+void blockKeyboard() {
     // https://chat.openai.com/share/40df0dc9-dd46-4203-bb44-c5eaf312e82a
     CFMachPortRef eventTap;
     CGEventMask mask = kCGEventMaskForAllEvents;

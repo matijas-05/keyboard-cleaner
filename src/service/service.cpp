@@ -1,8 +1,8 @@
 #include <cstring>
 #include <thread>
 #include "../config.hpp"
+#include "block_keyboard.hpp"
 #include "log.c/log.h"
-#include "os_specific.hpp"
 #include "pipe_reader.hpp"
 
 #if defined(__linux__) || defined(__APPLE__)
@@ -29,15 +29,10 @@ void disableKeyboard() {
     } else if (pid == 0) {
         // Child process - disable keyboard and keep process running
 #ifdef __linux__
-        blockKeys(keyboardPath);
+        blockKeyboard(keyboardPath);
 #else
-        blockKeys();
+        blockKeyboard();
 #endif
-
-        // Wait until keyboard is re-enabled, without taking up CPU
-        while (true) {
-            sleep(1);
-        }
     } else {
         // Parent process - save child pid
         childPid = pid;
