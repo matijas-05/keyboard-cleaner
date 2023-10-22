@@ -17,7 +17,7 @@ int PipeReader::open() {
     if (errno == ENOENT) {
         log_debug("Waiting for tray to create named pipe...");
     }
-    while (errno == ENOENT) {
+    while (errno == ENOENT || errno == ETIMEDOUT) {
         m_fd = ::open(PIPE_PATH, O_RDONLY);
         if (m_fd != -1) {
             break;
