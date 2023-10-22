@@ -3,7 +3,6 @@
 #include "../config.hpp"
 #include "block_keyboard.hpp"
 #include "log.c/log.h"
-#include "pipe_reader.hpp"
 
 #if defined(__linux__) || defined(__APPLE__)
 #include <signal.h>
@@ -69,6 +68,8 @@ void runCommand(std::string command) {
     }
 }
 
+#ifdef __APPLE__
+#include "pipe_reader.hpp"
 int main() {
     log_info("Starting keyboard disable service...");
 
@@ -96,3 +97,4 @@ int main() {
 
     return 0;
 }
+#endif

@@ -1,11 +1,10 @@
+#ifdef __APPLE__
 #include "pipe_reader.hpp"
+#include <fcntl.h>
+#include <unistd.h>
 #include <cstring>
 #include "../config.hpp"
 #include "log.c/log.h"
-
-#if defined(__linux__) || defined(__APPLE__)
-#include <fcntl.h>
-#include <unistd.h>
 
 int PipeReader::open() {
     m_fd = ::open(PIPE_PATH, O_RDONLY);
@@ -37,6 +36,4 @@ std::string PipeReader::read() {
     }
     return std::string(buf, n);
 }
-#elif defined(_WIN32)
-// TODO: Implement
 #endif

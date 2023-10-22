@@ -1,9 +1,7 @@
 #pragma once
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__APPLE__)
 #define PIPE_PATH "/tmp/keyboard-cleaner-fifo"
-#elif defined(_WIN32)
-// TODO: Implement
 #endif
 
 #ifdef __linux__

@@ -1,4 +1,5 @@
 #pragma once
+#ifdef __APPLE__
 
 #include <string>
 
@@ -10,3 +11,4 @@ class PipeReader {
    private:
     int m_fd;
 };
+#endif
