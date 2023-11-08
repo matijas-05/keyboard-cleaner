@@ -1,5 +1,7 @@
 #include <sys/stat.h>
+#ifdef __APPLE__
 #include "../config.hpp"
+#endif
 #include "log.c/log.h"
 #include "tray.hpp"
 
@@ -21,8 +23,8 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
-    log_info("Waiting for keyboard disable service to start...");
 #ifdef __APPLE__
+    log_info("Waiting for keyboard disable service to start...");
     if (pipeWriter.open() == -1) {
         log_error("Failed to open named pipe: %s", std::strerror(errno));
         std::exit(1);

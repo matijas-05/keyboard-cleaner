@@ -1,12 +1,14 @@
 #include <cstring>
+#include <string>
 #include <thread>
 #include "../config.hpp"
-#include "block_keyboard.hpp"
 #include "log.c/log.h"
 
 #if defined(__linux__) || defined(__APPLE__)
 #include <signal.h>
 #include <unistd.h>
+#include "block_keyboard.hpp"
+
 int childPid = 0;
 
 #if defined(__linux__)
@@ -51,7 +53,27 @@ void enableKeyboard() {
     }
 }
 #elif defined(_WIN32)
-// TODO: Implement https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-blockinput
+#include <windows.h>
+
+HHOOK keyboardHook = nullptr;
+LRESULT CALLBACK Hook(int code, WPARAM wParam, LPARAM lParam) {
+    if (code >= 0) {
+        // Nonzero value means prevents the system from passing the message to the next
+        // hook procedure in the current hook chain.
+        return 1;
+    } else {
+        return CallNextHookEx(keyboardHook, code, wParam, lParam);
+    }
+}
+
+void disableKeyboard() {
+    keyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, Hook, NULL, 0);
+    log_info("Disabled keyboard");
+}
+void enableKeyboard() {
+    UnhookWindowsHookEx(keyboardHook);
+    log_info("Enabled keyboard");
+}
 #endif
 
 void runCommand(std::string command) {
