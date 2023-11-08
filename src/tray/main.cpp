@@ -1,4 +1,5 @@
 #include <sys/stat.h>
+#include "command_runner.hpp"
 #ifdef __APPLE__
 #include "../config.hpp"
 #endif
@@ -7,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
-    PipeWriter pipeWriter;
+    CommandRunner commandRunner;
 
     if (!QSystemTrayIcon::isSystemTrayAvailable()) {
         log_error("System tray is not available");
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef __APPLE__
     log_info("Waiting for keyboard disable service to start...");
-    if (pipeWriter.open() == -1) {
+    if (commandRunner.open() == -1) {
         log_error("Failed to open named pipe: %s", std::strerror(errno));
         std::exit(1);
     } else {
@@ -34,7 +35,7 @@ int main(int argc, char* argv[]) {
 #endif
 
     log_info("Starting tray UI...");
-    Tray tray(pipeWriter);
+    Tray tray(commandRunner);
     tray.init();
     tray.show();
 

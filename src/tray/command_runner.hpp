@@ -2,12 +2,12 @@
 
 #include <fstream>
 
-class PipeWriter {
+class CommandRunner {
    public:
 #ifdef __APPLE__
     int open();
 #endif
-    int write(std::string command);
+    int run(std::string command);
 
 #ifdef __APPLE__
    private:

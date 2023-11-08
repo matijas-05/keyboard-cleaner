@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QtWidgets>
-#include "pipe_writer.hpp"
+#include "command_runner.hpp"
 
 #ifdef __linux__
 #include <string>
@@ -11,7 +11,8 @@ class Tray : public QObject {
     Q_OBJECT
 
    public:
-    Tray(PipeWriter& pipeWriter) : m_tray(QSystemTrayIcon()), m_pipeWriter(pipeWriter){};
+    Tray(CommandRunner& commandRunner)
+        : m_tray(QSystemTrayIcon()), m_commandRunner(commandRunner){};
     void init();
     void show();
 
@@ -24,7 +25,7 @@ class Tray : public QObject {
 
    private:
     QSystemTrayIcon m_tray;
-    PipeWriter& m_pipeWriter;
+    CommandRunner& m_commandRunner;
 #ifdef __linux__
     std::string m_keyboardPath;
 #endif  // __linux__

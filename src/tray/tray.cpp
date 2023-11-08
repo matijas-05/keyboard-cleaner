@@ -1,7 +1,7 @@
 #include "tray.hpp"
 #include "../config.hpp"
+#include "command_runner.hpp"
 #include "log.c/log.h"
-#include "pipe_writer.hpp"
 
 #ifdef __linux__
 #include <fcntl.h>
@@ -42,9 +42,9 @@ void Tray::init() {
             }
 
             close(fd);
-            libevdev_free(dev);
         }
     }
+    libevdev_free(dev);
 
     keyboardsGroup->actions().first()->trigger();
     keyboardsMenu->addActions(keyboardsGroup->actions());
@@ -57,7 +57,7 @@ void Tray::init() {
     trayMenu->addAction(disableKeyboard);
     trayMenu->addAction(quit);
 
-    QIcon icon("icon.png");
+    QIcon icon("keyboard-cleaner.png");
     m_tray.setIcon(icon);
     m_tray.setContextMenu(trayMenu);
 }
@@ -75,21 +75,21 @@ void Tray::setKeyboardPath(const std::string& path) {
 void Tray::toggleKeyboard(bool value) const {
 #ifdef __linux__
     if (value) {
-        if (m_pipeWriter.write(std::string(DISABLE + (" " + m_keyboardPath))) == -1) {
+        if (m_commandRunner.run(std::string(DISABLE + (" " + m_keyboardPath))) == -1) {
             log_error("Failed to write to named pipe: %s", std::strerror(errno));
         }
     } else {
-        if (m_pipeWriter.write(ENABLE) == -1) {
+        if (m_commandRunner.run(ENABLE) == -1) {
             log_error("Failed to write to named pipe: %s", std::strerror(errno));
         }
     }
 #else
-    if (m_pipeWriter.write(value ? DISABLE : ENABLE) == -1) {
+    if (m_commandRunner.run(value ? DISABLE : ENABLE) == -1) {
         log_error("Failed to write to named pipe: %s", std::strerror(errno));
     }
 #endif
 }
 void Tray::quit() const {
-    m_pipeWriter.write(ENABLE);
+    m_commandRunner.run(ENABLE);
     std::exit(0);
 }
