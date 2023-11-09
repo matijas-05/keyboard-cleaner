@@ -57,7 +57,7 @@ void Tray::init() {
     trayMenu->addAction(disableKeyboard);
     trayMenu->addAction(quit);
 
-    QIcon icon(":/resources/icon-tray.png");
+    QIcon icon(":/resources/icon-tray");
     m_tray.setIcon(icon);
     m_tray.setContextMenu(trayMenu);
 }

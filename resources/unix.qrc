@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="resources/icon-tray">F:/Projekty/keyboard-cleaner/resources/icon-tray.png</file>
+  </qresource>
+</RCC>
+

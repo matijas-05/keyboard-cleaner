@@ -33,7 +33,7 @@ if(APPLE)
   set(ICON_FILE ${CMAKE_SOURCE_DIR}/resources/icon.icns)
   set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
 
-  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${ICON_FILE})
+  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${ICON_FILE} "./resources/unix.qrc")
   set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_NAME "Keyboard Cleaner"
@@ -47,20 +47,14 @@ if(APPLE)
   target_link_libraries(${PROJECT_NAME}-service PRIVATE stdc++ log.c ${OS_SPECIFIC_LIBRARIES_SERVICE})
 
 elseif(LINUX)
-  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${SERVICE_FILES})
+  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${SERVICE_FILES} "./resources/unix.qrc")
   target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets ${OS_SPECIFIC_LIBRARIES_TRAY})
 elseif(WIN32)
   if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${SERVICE_FILES})
+    qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${SERVICE_FILES} "./resources/win.qrc")
   else()
-    qt_add_executable(${PROJECT_NAME} WIN32 ${TRAY_FILES} ${SERVICE_FILES})
+    qt_add_executable(${PROJECT_NAME} WIN32 ${TRAY_FILES} ${SERVICE_FILES} "./resources/win.qrc")
   endif()
 
   target_link_libraries(${PROJECT_NAME} PRIVATE log.c Qt6::Widgets)
 endif()
-
-qt_add_resources(${PROJECT_NAME} "resources"
-    PREFIX "/"
-    FILES
-    resources/icon-tray.png
-)
