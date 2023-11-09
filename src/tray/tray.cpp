@@ -57,7 +57,7 @@ void Tray::init() {
     trayMenu->addAction(disableKeyboard);
     trayMenu->addAction(quit);
 
-    QIcon icon("keyboard-cleaner.png");
+    QIcon icon(":/resources/icon.png");
     m_tray.setIcon(icon);
     m_tray.setContextMenu(trayMenu);
 }
