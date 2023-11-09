@@ -30,11 +30,15 @@ set(TRAY_FILES ./src/tray/main.cpp ./src/tray/tray.cpp ./src/tray/command_runner
 set(SERVICE_FILES ./src/service/service.cpp ./src/service/block_keyboard.cpp ./src/service/pipe_reader.cpp)
 
 if(APPLE)
-  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES})
+  set(ICON_FILE ${CMAKE_SOURCE_DIR}/resources/icon.icns)
+  set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+  qt_add_executable(${PROJECT_NAME} ${TRAY_FILES} ${ICON_FILE})
   set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE TRUE
-    MACOX_BUNDLE_NAME "Keyboard Cleaner"
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.mwojtyna.keyboard-cleaner"
+    MACOSX_BUNDLE_NAME "Keyboard Cleaner"
+    MACOSX_BUNDLE_ICON_FILE icon.icns
+    MACOSX_BUNDLE_GUI_IDENTIFIER com.mwojtyna.keyboard-cleaner
     MACOSX_FRAMEWORK_IDENTIFIER org.cmake.ExecutableTarget
   )
   target_link_libraries(${PROJECT_NAME} PRIVATE stdc++ log.c Qt6::Widgets ${OS_SPECIFIC_LIBRARIES_TRAY})
@@ -58,5 +62,5 @@ endif()
 qt_add_resources(${PROJECT_NAME} "resources"
     PREFIX "/"
     FILES
-    resources/icon.png
+    resources/icon-tray.png
 )
