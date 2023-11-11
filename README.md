@@ -12,22 +12,23 @@ A cross-platform system tray tool for disabling your keyboard.
 ### Linux
 
 -   A system tray
--   `libevdev-dev` package (on Ubuntu, may have a different name on other distros)
--   `qt6-base-dev` package (on Ubuntu, may have a different name on other distros)
+-   `qt` >= 6.2 (Ubuntu 22.04 or newer)
+-   `libevdev` >= 1.12 (Ubuntu 22.04 or newer)
 
 ### MacOS
 
 -   `qt` package from homebrew
 
-## Usage
+## First usage
 
 ### Linux
 
-1. Add your user to the `input` group - `sudo usermod -aG input $USER`. This allows to block input without root permissions
-2. Run the `keyboard-cleaner` binary
-3. Click on the icon in the system tray
-4. Select your keyboard from the menu
-5. Press `Disable keyboard`
+1. Add your user to the `input` group - `sudo adduser $USER input`
+2. Restart your system
+3. Run the `keyboard-cleaner` binary
+4. Click on the icon in the system tray
+5. Select your keyboard from the menu
+6. Press `Disable keyboard`
 
 ### Windows
 

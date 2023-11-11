@@ -27,7 +27,7 @@ void Tray::init() {
             int fd = open(entry.path().c_str(), O_RDONLY | O_NONBLOCK);
             int rc = libevdev_new_from_fd(fd, &dev);
             if (rc < 0) {
-                log_error("Failed to open device for libevdev: %s", std::strerror(-rc));
+                log_error("Failed to open '%s' for libevdev: %s", entry.path().c_str(), std::strerror(-rc));
                 continue;
             }
 
